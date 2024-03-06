@@ -8,12 +8,12 @@ class player():
 
     
     def attackEnemy(self):
-        print('attack')
-        if randint(100) < 51:
-            return self.attack
+        if randint(0, 100) > 51:
             print('attack udany')
+            return self.attack
         else:
             print('attack nie udany')
+            return 0
 
 
 class enemy():
@@ -21,5 +21,5 @@ class enemy():
         self.hp = hp
         self.attack = attack
 
-    def getDmg(slef, dmg):
+    def getDmg(self, dmg):
         self.hp -= dmg

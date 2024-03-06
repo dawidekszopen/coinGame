@@ -1,4 +1,5 @@
 import pygame
+import pygame_widgets
 from pygame_widgets.button import Button
 from pygame_widgets.progressbar import ProgressBar
 
@@ -13,6 +14,8 @@ enemy = classes.enemy(100, 5)
 pygame.init()
 
 screen = pygame.display.set_mode((800, 800))
+wybor = pygame.display.set_mode((800, 800))
+
 pygame.display.set_caption('coinGame')
 
 running = True
@@ -32,7 +35,9 @@ def main():
         screen,
         443, 574, 305, 64,
         text="attack",
-        onClick= lambda: enemy.getDmg(gracz.attackEnemy())
+        onClick= lambda: enemy.getDmg(gracz.attackEnemy()),
+        inactiveColour=(200, 50, 0),
+        pressedColour=(0,200,0)
     )
 
     items = Button(
@@ -52,6 +57,29 @@ def main():
         lambda: enemy.hp * 0.01
     )
 
+    tlo = pygame.draw.rect(wybor, (120, 160, 131), pygame.Rect(163, 150, 500, 500))
+
+    orzel = Button(
+        wybor,
+        189, 325, 150, 150,
+        radius=100,
+        inactiveColour=(53, 55, 75),
+        pressedColour=(80, 114, 123),
+        hoverColour=(52, 73, 85),
+        text="orzeł"
+    )
+
+    reszka = Button(
+        wybor,
+        485, 325, 150, 150,
+        radius=100,
+        inactiveColour=(53, 55, 75),
+        pressedColour=(80, 114, 123),
+        hoverColour=(52, 73, 85),
+        text="reszka"
+    )
+
+
     while running:
         events = pygame.event.get()
 
@@ -60,11 +88,17 @@ def main():
                 running = False
 
 
-
         attack.draw()
         items.draw()
         defe.draw()
         enemyHp.draw()
+
+        orzel.draw()
+        reszka.draw()
+        
+       
+
+        pygame_widgets.update(events)
         pygame.display.update()
 
 
