@@ -1,11 +1,14 @@
 import pygame
 from pygame_widgets.button import Button
+from pygame_widgets.progressbar import ProgressBar
 
 import classes
 
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 gracz = classes.player()
+
+enemy = classes.enemy(100, 5)
 
 pygame.init()
 
@@ -29,6 +32,7 @@ def main():
         screen,
         443, 574, 305, 64,
         text="attack",
+        onClick= lambda: enemy.getDmg(gracz.attackEnemy())
     )
 
     items = Button(
@@ -43,6 +47,11 @@ def main():
         text="def",
     )
 
+    enemyHp = ProgressBar(screen, 
+        454, 50, 154, 20, 
+        lambda: enemy.hp * 0.01
+    )
+
     while running:
         events = pygame.event.get()
 
@@ -55,6 +64,7 @@ def main():
         attack.draw()
         items.draw()
         defe.draw()
+        enemyHp.draw()
         pygame.display.update()
 
 
