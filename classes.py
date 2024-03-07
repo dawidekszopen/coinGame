@@ -34,6 +34,8 @@ class game():
 
         self.doAttack = False
 
+        
+
 
         self.attack = Button(
             self.screen,
