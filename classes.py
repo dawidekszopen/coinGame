@@ -1,24 +1,26 @@
-from random import randint
+from random import randint, uniform
 from pygame_widgets.button import Button
 from pygame_widgets.progressbar import ProgressBar
 
-class player():
+class PlayerClass():
     def __init__(self) -> None:
         self.name =''
         self.hp = 100
         self.attack = 5
+        self.crit = {'min': 1.0, 'max': 1.5}
 
     
     def attackEnemy(self):
-        if randint(0, 100) > 51:
-            print('attack udany')
-            return self.attack
+        if randint(0, 100) < 50:
+            dmg = round(self.attack * uniform(self.crit['min'], self.crit['max']), 1)
+            print(dmg)
+            return dmg
         else:
             print('attack nie udany')
             return 0
 
 
-class enemy():
+class EnemyClass():
     def __init__(self, hp, attack) -> None:
         self.hp = hp
         self.attack = attack
@@ -28,13 +30,12 @@ class enemy():
 
 
 
-class game():
-    def __init__(self, screenNew) -> None:
+class GameClass():
+    def __init__(self, screenNew, playerClass: PlayerClass ,enemyClass: EnemyClass) -> None:
         self.screen = screenNew
+        self.enemy = enemyClass
 
-        self.doAttack = False
-
-        
+        self.player = playerClass
 
 
         self.attack = Button(
@@ -68,49 +69,46 @@ class game():
         self.enemyHp = ProgressBar(
             self.screen, 
             454, 50, 154, 20, 
-            lambda: 100 * 0.01
+            lambda: self.enemy.hp * 0.01
         )
 
 
-        self.orzel = Button(
+        self.moneta = Button(
             self.screen,
-            637, 625, 100, 100,
+            521, 601, 150, 150,
             radius=100,
             inactiveColour=(53, 55, 75),
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
-            text="orzeł"
+            text="rzuć monetą",
+            onClick= lambda: self.coinFlip()
         )
 
-        self.reszka = Button(
-            self.screen,
-            454, 625, 100, 100,
-            radius=100,
-            inactiveColour=(53, 55, 75),
-            pressedColour=(120, 160, 131),
-            hoverColour=(80, 114, 123),
-            text="reszka"
-        )
+        self.moneta.hide()
 
-        self.reszka.hide()
-        self.orzel.hide()
+    def updateEnemyClass(self, enemyClass: EnemyClass):
+        self.enemy = enemyClass
 
     def update(self):
         self.attack.draw()
         self.items.draw()
         self.defe.draw()
         self.enemyHp.draw()
-        self.reszka.draw()
-        self.orzel.draw()
+        self.moneta.draw()
 
   
     def attackCoin(self):
-        self.doAttack = True
         self.attack.hide()
         self.items.hide()
         self.defe.hide()
 
-        self.reszka.show()
-        self.orzel.show()
+        self.moneta.show()
 
+    def coinFlip(self):
+        self.enemy.getDmg(self.player.attackEnemy())
 
+        self.attack.show()
+        self.items.show()
+        self.defe.show()
+
+        self.moneta.hide()

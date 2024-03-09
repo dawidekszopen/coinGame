@@ -7,9 +7,9 @@ import classes
 
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
-gracz = classes.player()
+gracz = classes.PlayerClass()
 
-enemy = classes.enemy(100, 5)
+enemy = classes.EnemyClass(100, 5)
 
 pygame.init()
 
@@ -18,7 +18,7 @@ screen = pygame.display.set_mode((800, 800))
 pygame.display.set_caption('coinGame')
 
 
-gra = classes.game(screen)
+gra = classes.GameClass(screen, gracz, enemy)
 
 running = True
 
