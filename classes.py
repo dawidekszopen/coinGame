@@ -9,19 +9,24 @@ import pygame
 
 
 class MobClass():
-    def __init__(self, hp, attack, minCrit, maxCrit) -> None:
+    def __init__(self, hp, attack, crit: list, defence: list) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
-        self.crit = {'min': minCrit, 'max': maxCrit}
+        self.crit = crit
+        self.defence = defence
+        self.defenceON = False
 
     def getDmg(self, dmg):
         self.hp -= dmg
         self.hp = round(self.hp, 1)
 
-    def attackFunction(self):
+    def attackFunction(self, defene: bool):
         if randint(0, 100) < 50:
-            dmg = round(self.attack * uniform(self.crit['min'], self.crit['max']), 1)
+            if defene:
+                dmg = round((self.attack * uniform(self.crit[0], self.crit[1])) / randint(self.defence[0], self.defence[1]), 1)
+            else:
+                dmg = round(self.attack * uniform(self.crit[0], self.crit[1]), 1)
             self.lastDmgGiven = dmg
             return dmg
         else:
@@ -32,13 +37,12 @@ class MobClass():
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 5, 1.0, 1.5)
-        self.name =''
+        super().__init__(100, 5, (1.0, 1.5), (2, 8))
        
 
 class EnemyClass(MobClass):
     def __init__(self, hp, attack) -> None:
-        super().__init__(hp, attack, 1.2, 1.7)
+        super().__init__(hp, attack, (1.2, 1.7), (1, 2))
 
 
 
@@ -78,16 +82,26 @@ class GameClass():
             self.screen,
             443, 574, 305, 64,
             text="attack",
-            onClick= lambda: self.attackCoin(),
+            onClick= lambda: self.tourChoose('A'),
             inactiveColour=(53, 55, 75),
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
             font=self.font
         )
 
-        self.items = Button(
+        self.defence = Button(
             self.screen,
             443, 643, 305, 64,
+            text="def",
+            inactiveColour=(53, 55, 75),
+            pressedColour=(120, 160, 131),
+            hoverColour=(80, 114, 123),
+            font=self.font,
+            onClick= lambda: self.tourChoose('D')
+        )
+        self.items = Button(
+            self.screen,
+            443, 712, 305, 64,
             text="items",
             inactiveColour=(53, 55, 75),
             pressedColour=(120, 160, 131),
@@ -95,15 +109,6 @@ class GameClass():
             font=self.font
         )
 
-        self.defe = Button(
-            self.screen,
-            443, 712, 305, 64,
-            text="def",
-            inactiveColour=(53, 55, 75),
-            pressedColour=(120, 160, 131),
-            hoverColour=(80, 114, 123),
-            font=self.font
-        )
 
         self.monetaImg = pygame.image.load('img/coin.png')
         self.moneta = Button(
@@ -142,25 +147,25 @@ class GameClass():
         pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
         self.attack.draw()
         self.items.draw()
-        self.defe.draw()
+        self.defence.draw()
         self.enemyHp.draw()
         self.moneta.draw()
 
         for event in events:
             if event == self.enemyAttackTimer:
                     if self.playerTour == False:
-                        self.player.getDmg(self.enemy.attackFunction())
+                        self.player.getDmg(self.enemy.attackFunction(self.player.defenceON))
                         self.playerTour = True
+
                         self.updateInfo()
                         self.attack.show()
                         self.items.show()
-                        self.defe.show()
+                        self.defence.show()
 
+                        pygame.time.set_timer(self.ENEMYATTACKTIMER, 0)
 
-
-
-
-
+                        if self.player.defenceON:
+                            self.player.defenceON = False
 
         pygame_widgets.update(events)
         pygame.display.update()
@@ -188,16 +193,26 @@ class GameClass():
             y += wordHeight
 
   
-    def attackCoin(self):
-        if self.playerTour:
+    def tourChoose(self, choose:str):
+        if choose == 'A':
             self.attack.hide()
             self.items.hide()
-            self.defe.hide()
+            self.defence.hide()
 
             self.moneta.show()
+        elif choose == 'D':
+            self.attack.hide()
+            self.items.hide()
+            self.defence.hide()
+
+            self.player.defenceON = True
+            self.playerTour = False
+            pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
+            self.updateInfo()
+
 
     def coinFlip(self):
-        self.enemy.getDmg(self.player.attackFunction())
+        self.enemy.getDmg(self.player.attackFunction(self.enemy.defenceON))
         self.playerTour = False
         
         pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
@@ -206,9 +221,15 @@ class GameClass():
 
         self.moneta.hide()
 
+
+
+
     def updateInfo(self):
         if self.playerTour == False:
-            if self.player.lastDmgGiven == 0:
+            if self.player.defenceON:
+                self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                                'Ustawiłeś się w pozycję obroną\n'
+            elif self.player.lastDmgGiven == 0:
                 self.infoText = f'hp: {self.player.hp}/100\n\n'\
                                 'Nie udało ci się zaatakować przeciwnik\n'
             else:
