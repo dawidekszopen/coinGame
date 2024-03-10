@@ -19,7 +19,7 @@ def main():
             if event.type == pygame.QUIT:
                 gra.running = False
 
-        gra.update()
+        gra.update(events)
 
 
 if __name__ == "__main__":

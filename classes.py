@@ -6,36 +6,39 @@ from pygame_widgets.progressbar import ProgressBar
 
 import pygame
 
+
+
 class MobClass():
-    def __init__(self, hp, attack) -> None:
+    def __init__(self, hp, attack, minCrit, maxCrit) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
+        self.crit = {'min': minCrit, 'max': maxCrit}
 
     def getDmg(self, dmg):
         self.hp -= dmg
+        self.hp = round(self.hp, 1)
 
     def attackFunction(self):
         if randint(0, 100) < 50:
             dmg = round(self.attack * uniform(self.crit['min'], self.crit['max']), 1)
             self.lastDmgGiven = dmg
-            print(dmg)
             return dmg
         else:
-            print('attack nie udany')
             self.lastDmgGiven = 0
             return 0
 
+
+
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 5)
+        super().__init__(100, 5, 1.0, 1.5)
         self.name =''
-        self.crit = {'min': 1.0, 'max': 1.5}
-
+       
 
 class EnemyClass(MobClass):
     def __init__(self, hp, attack) -> None:
-        super().__init__(hp, attack)
+        super().__init__(hp, attack, 1.2, 1.7)
 
 
 
@@ -55,6 +58,12 @@ class GameClass():
         pygame.display.set_caption('coinGame')
 
         self.font = pygame.font.Font('font/JMH Typewriter.ttf', 25)
+
+
+        self.infoText = f'hp: {self.player.hp}/100\n'
+
+        self.ENEMYATTACKTIMER = pygame.event.custom_type()
+        self.enemyAttackTimer = pygame.event.Event(self.ENEMYATTACKTIMER)
 
         #*LAYOUT
         pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
@@ -96,16 +105,17 @@ class GameClass():
             font=self.font
         )
 
+        self.monetaImg = pygame.image.load('img/coin.png')
         self.moneta = Button(
             self.screen,
             521, 601, 150, 150,
             radius=100,
-            inactiveColour=(53, 55, 75),
-            pressedColour=(120, 160, 131),
-            hoverColour=(80, 114, 123),
-            text="rzuć monetą",
+            inactiveColour=(207, 155, 31),
+            hoverColour=(207, 177, 31),
+            pressedColour=(209, 201, 39),
             onClick= lambda: self.coinFlip(),
-            font=pygame.font.Font('font/JMH Typewriter.ttf', 20)
+            font=pygame.font.Font('font/JMH Typewriter.ttf', 20),
+            image=self.monetaImg
         )
     
         self.moneta.hide()
@@ -120,26 +130,13 @@ class GameClass():
     def updateEnemyClass(self, enemyClass: EnemyClass):
         self.enemy = enemyClass
 
-    def update(self):
+    def update(self, events):
         #*INFO
 
         pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
-        self.infoHp = self.font.render(f'hp: {self.player.hp}/100', True, (255, 255, 255))
-        self.screen.blit(self.infoHp, ((166 - (self.infoHp.get_size()[0]/2))+38, 577))
-
-        self.infoAttack1 = self.font.render('Zadałeś przeciwnikowi', True, (255, 255, 255))
-        self.infoAttack2 = self.font.render('Przeciwnik zadał', True, (255, 255, 255))
-        self.infoDmg = self.font.render(f'{self.givenDmg} dmg', True, (255, 255, 255))
 
 
-
-        if self.playerTour:
-            self.screen.blit(self.infoAttack1, ((166 - (self.infoAttack1.get_size()[0]/2))+38, 643))
-        else:
-            self.screen.blit(self.infoAttack2, ((166 - (self.infoAttack2.get_size()[0]/2))+38, 643))
-
-        self.screen.blit(self.infoDmg, ((166 - (self.infoDmg.get_size()[0]/2))+38, 673))
-
+        self.infoTextRenderer(self.infoText, (48,577), (333, 220))
 
 
         pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
@@ -149,25 +146,80 @@ class GameClass():
         self.enemyHp.draw()
         self.moneta.draw()
 
-        pygame_widgets.update(pygame.event.get())
+        for event in events:
+            if event == self.enemyAttackTimer:
+                    if self.playerTour == False:
+                        self.player.getDmg(self.enemy.attackFunction())
+                        self.playerTour = True
+                        self.updateInfo()
+                        self.attack.show()
+                        self.items.show()
+                        self.defe.show()
+
+
+
+
+
+
+
+        pygame_widgets.update(events)
         pygame.display.update()
 
 
+    def infoTextRenderer(self, text, pos, size: pygame.Vector2):
+        words = [word.split(' ') for word in text.splitlines()]
+        space = self.font.size(' ')[0]
+
+        maxWidth = size[0]
+        x,y = pos
+
+        for line in words:
+            for word in line:
+                wordSurface = self.font.render(word, True, pygame.Color('white'))
+                wordWidth, wordHeight = wordSurface.get_size()
+
+                if x + wordWidth >= maxWidth:
+                    x = pos[0]
+                    y += wordHeight
+                
+                self.screen.blit(wordSurface, (x, y))
+                x += wordWidth + space
+            x = pos[0]
+            y += wordHeight
+
   
     def attackCoin(self):
-        self.attack.hide()
-        self.items.hide()
-        self.defe.hide()
+        if self.playerTour:
+            self.attack.hide()
+            self.items.hide()
+            self.defe.hide()
 
-        self.moneta.show()
+            self.moneta.show()
 
     def coinFlip(self):
         self.enemy.getDmg(self.player.attackFunction())
-        
         self.playerTour = False
         
-        self.attack.show()
-        self.items.show()
-        self.defe.show()
+        pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
+
+        self.updateInfo()
 
         self.moneta.hide()
+
+    def updateInfo(self):
+        if self.playerTour == False:
+            if self.player.lastDmgGiven == 0:
+                self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                                'Nie udało ci się zaatakować przeciwnik\n'
+            else:
+                self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                                'Zadałeś przeciwnikowi\n'\
+                                f'{self.player.lastDmgGiven} obrażeń'
+        else:
+            if self.enemy.lastDmgGiven == 0:
+                self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                                'Przeciwnikowi nie udało się ciebie zaatakować\n'
+            else:
+                self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                                'przeciwnik zadał\n'\
+                                f'{self.enemy.lastDmgGiven} obrażeń'
