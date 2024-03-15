@@ -6,7 +6,7 @@ from pygame_widgets.progressbar import ProgressBar
 
 import pygame
 
-
+#https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 class MobClass():
     def __init__(self, hp, attack, crit: list, defence: list) -> None:
@@ -38,6 +38,14 @@ class MobClass():
 class PlayerClass(MobClass):
     def __init__(self) -> None:
         super().__init__(100, 5, (1.0, 1.5), (2, 8))
+        self.eq = [
+            {'name': 'chleb', 'value': 2},
+            {'name': 'chleb', 'value': 2},
+            {'name': 'chleb', 'value': 2},
+            {'name': 'chleb', 'value': 2},
+            {'name': 'chleb', 'value': 2},
+            {'name': 'chleb', 'value': 2232}
+        ]
        
 
 class EnemyClass(MobClass):
@@ -70,14 +78,11 @@ class GameClass():
         self.enemyAttackTimer = pygame.event.Event(self.ENEMYATTACKTIMER)
 
         #*LAYOUT
-        pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
-
         pygame.draw.rect(self.screen, (217, 217, 217), pygame.Rect(454, 75, 153, 286)) #todo: zmienić to w teksture enemy
 
 
 
-        #*PRZYCISKI
-
+        #*FIRST
         self.attack = Button(
             self.screen,
             443, 574, 305, 64,
@@ -86,7 +91,8 @@ class GameClass():
             inactiveColour=(53, 55, 75),
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
-            font=self.font
+            font=self.font,
+            textColour=(189,220,222)
         )
 
         self.defence = Button(
@@ -97,7 +103,8 @@ class GameClass():
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
             font=self.font,
-            onClick= lambda: self.tourChoose('D')
+            onClick= lambda: self.tourChoose('D'),
+            textColour=(189,220,222)
         )
         self.items = Button(
             self.screen,
@@ -106,10 +113,11 @@ class GameClass():
             inactiveColour=(53, 55, 75),
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
-            font=self.font
+            font=self.font,
+            textColour=(189,220,222)
         )
 
-
+        #* MONETA
         self.monetaImg = pygame.image.load('img/coin.png')
         self.moneta = Button(
             self.screen,
@@ -125,6 +133,13 @@ class GameClass():
     
         self.moneta.hide()
 
+        #*ITEMS
+
+        self.itemsButton = []
+        self.makeItemsButton()
+        self.updateTextItemButon()
+
+
         #*ENEMY HP
         self.enemyHp = ProgressBar(
             self.screen, 
@@ -137,7 +152,7 @@ class GameClass():
 
     def update(self, events):
         #*INFO
-
+        pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
         pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
 
 
@@ -145,11 +160,19 @@ class GameClass():
 
 
         pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
+
         self.attack.draw()
         self.items.draw()
         self.defence.draw()
-        self.enemyHp.draw()
         self.moneta.draw()
+
+        for i in range(len(self.itemsButton)):
+            self.itemsButton[i].draw()
+
+        for i in range(len(self.itemsButton)):
+            self.itemsButton[i].hide()
+
+        self.enemyHp.draw()
 
         for event in events:
             if event == self.enemyAttackTimer:
@@ -171,6 +194,7 @@ class GameClass():
         pygame.display.update()
 
 
+
     def infoTextRenderer(self, text, pos, size: pygame.Vector2):
         words = [word.split(' ') for word in text.splitlines()]
         space = self.font.size(' ')[0]
@@ -180,7 +204,7 @@ class GameClass():
 
         for line in words:
             for word in line:
-                wordSurface = self.font.render(word, True, pygame.Color('white'))
+                wordSurface = self.font.render(word, True, (242, 240, 240))
                 wordWidth, wordHeight = wordSurface.get_size()
 
                 if x + wordWidth >= maxWidth:
@@ -244,3 +268,26 @@ class GameClass():
                 self.infoText = f'hp: {self.player.hp}/100\n\n'\
                                 'przeciwnik zadał\n'\
                                 f'{self.enemy.lastDmgGiven} obrażeń'
+
+
+    def makeItemsButton(self):
+        #w 352
+        #h 53
+        butonpos = [[15, 575], [15, 649], [15, 723], [433, 575], [433, 649], [433, 723]]
+        for i in range(6):
+            self.itemsButton.append(
+                Button(
+                    self.screen,
+                    butonpos[i][0], butonpos[i][1], 352, 53,
+                    inactiveColour=(52, 73, 85),
+                    pressedColour=(120, 160, 131),
+                    hoverColour=(80, 114, 123),
+                    font=self.font,
+                    textColour=(189,220,222),
+                    text=''
+                )
+            )
+
+    def updateTextItemButon(self):
+        for i in range(len(self.itemsButton)):
+            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')

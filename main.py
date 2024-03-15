@@ -1,8 +1,6 @@
 import pygame
 import classes
 
-#https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
-
 gracz = classes.PlayerClass()
 
 enemy = classes.EnemyClass(100, 5)
