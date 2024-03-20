@@ -64,6 +64,8 @@ class GameClass():
 
         self.playerTour = True
 
+        self.eqOn = False
+
         pygame.init()
 
         self.screen = pygame.display.set_mode((800, 800))
@@ -114,11 +116,12 @@ class GameClass():
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
             font=self.font,
-            textColour=(189,220,222)
+            textColour=(189,220,222),
+            onClick= lambda: self.tourChoose('I')
         )
 
         #* MONETA
-        self.monetaImg = pygame.image.load('img/coin.png')
+        monetaImg = pygame.image.load('img/coin.png')
         self.moneta = Button(
             self.screen,
             521, 601, 150, 150,
@@ -128,7 +131,7 @@ class GameClass():
             pressedColour=(209, 201, 39),
             onClick= lambda: self.coinFlip(),
             font=pygame.font.Font('font/JMH Typewriter.ttf', 20),
-            image=self.monetaImg
+            image=monetaImg
         )
     
         self.moneta.hide()
@@ -139,6 +142,33 @@ class GameClass():
         self.makeItemsButton()
         self.updateTextItemButon()
 
+        for i in range(len(self.itemsButton)):
+            self.itemsButton[i].hide()
+
+        #*RETURN
+        returnImg = pygame.image.load('img/return.png')
+        self.returnButton1 = Button(
+            self.screen,
+            717, 576, 35, 35,
+            image=returnImg,
+            inactiveColour=(52, 73, 85),
+            hoverColour=(52, 73, 85),
+            pressedColour=(52, 73, 85),
+            onClick= lambda: self.tourChoose('R')
+        )
+
+        self.returnButton2 = Button(
+            self.screen,
+            751, 558, 35, 35,
+            image=returnImg,
+            inactiveColour=(53, 55, 75),
+            hoverColour=(53, 55, 75),
+            pressedColour=(53, 55, 75),
+            onClick= lambda: self.tourChoose('R')
+        )
+
+        self.returnButton1.hide()
+        self.returnButton2.hide()
 
         #*ENEMY HP
         self.enemyHp = ProgressBar(
@@ -152,25 +182,29 @@ class GameClass():
 
     def update(self, events):
         #*INFO
+
+
         pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
-        pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
+        
+        
+        if self.eqOn == False:
+            pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
+            self.infoTextRenderer(self.infoText, (48,577), (333, 220))
+            pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
 
 
-        self.infoTextRenderer(self.infoText, (48,577), (333, 220))
 
-
-        pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
 
         self.attack.draw()
         self.items.draw()
         self.defence.draw()
         self.moneta.draw()
 
-        for i in range(len(self.itemsButton)):
-            self.itemsButton[i].draw()
+        self.returnButton1.draw()
+        self.returnButton2.draw()
 
         for i in range(len(self.itemsButton)):
-            self.itemsButton[i].hide()
+            self.itemsButton[i].draw()
 
         self.enemyHp.draw()
 
@@ -219,12 +253,16 @@ class GameClass():
   
     def tourChoose(self, choose:str):
         if choose == 'A':
+            self.returnButton1.show()
+
             self.attack.hide()
             self.items.hide()
             self.defence.hide()
 
             self.moneta.show()
         elif choose == 'D':
+            self.returnButton1.show()
+
             self.attack.hide()
             self.items.hide()
             self.defence.hide()
@@ -233,6 +271,31 @@ class GameClass():
             self.playerTour = False
             pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
             self.updateInfo()
+        elif choose == 'I':
+            self.returnButton2.hide()
+
+
+            self.attack.hide()
+            self.items.hide()
+            self.defence.hide()
+            self.eqOn = True
+
+            for i in range(len(self.itemsButton)):
+                self.itemsButton[i].show()
+
+        elif choose == 'R':
+            self.eqOn = False
+            for i in range(len(self.itemsButton)):
+                self.itemsButton[i].hide()
+            
+            self.moneta.hide()
+
+            self.attack.show()
+            self.items.show()
+            self.defence.show()
+
+            self.returnButton1.hide()
+            self.returnButton2.hide()
 
 
     def coinFlip(self):
@@ -244,8 +307,6 @@ class GameClass():
         self.updateInfo()
 
         self.moneta.hide()
-
-
 
 
     def updateInfo(self):
@@ -271,9 +332,12 @@ class GameClass():
 
 
     def makeItemsButton(self):
-        #w 352
-        #h 53
-        butonpos = [[15, 575], [15, 649], [15, 723], [433, 575], [433, 649], [433, 723]]
+
+        #32
+        
+
+        butonpos = [[55, 576], [55, 649], [55, 723], 
+                    [418, 576], [418, 649], [418, 723]]
         for i in range(6):
             self.itemsButton.append(
                 Button(
