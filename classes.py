@@ -9,48 +9,54 @@ import pygame
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 class MobClass():
-    def __init__(self, hp, attack, crit: list, defence: list) -> None:
+    def __init__(self, hp, attack, critRate: int, defence: list) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
-        self.crit = crit
+        self.critRate = critRate
         self.defence = defence
         self.defenceON = False
 
     def getDmg(self, dmg):
         self.hp -= dmg
-        self.hp = round(self.hp, 1)
 
     def attackFunction(self, defene: bool):
         if randint(0, 100) < 50:
-            if defene:
-                dmg = round((self.attack * uniform(self.crit[0], self.crit[1])) / randint(self.defence[0], self.defence[1]), 1)
+            if randint(0, 100) < self.critRate:
+                dmg = self.attack * randint(2, 5)
             else:
-                dmg = round(self.attack * uniform(self.crit[0], self.crit[1]), 1)
+                dmg = self.attack
+
+            if defene:
+                dmg = dmg - randint(self.defence[0], self.defence[1])
+                
             self.lastDmgGiven = dmg
+            
             return dmg
         else:
             self.lastDmgGiven = 0
             return 0
 
+    def heal(self, hpUP):
+        self.hp += hpUP
 
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 5, (1.0, 1.5), (2, 8))
+        super().__init__(90, 10, 5, (2, 8))
         self.eq = [
-            {'name': 'chleb', 'value': 2},
-            {'name': 'chleb', 'value': 2},
-            {'name': 'chleb', 'value': 2},
-            {'name': 'chleb', 'value': 2},
-            {'name': 'chleb', 'value': 2},
-            {'name': 'chleb', 'value': 2232}
+            {'name': 'Pite mleko smoka', 'value': 99, 'regeneration': 2},
+            {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
+            {'name': 'Placek trolla', 'value': 99, 'regeneration': 5},
+            {'name': 'Placki minotaura', 'value': 99, 'regeneration': 6},
+            {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 15},
+            {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 20}
         ]
        
 
 class EnemyClass(MobClass):
     def __init__(self, hp, attack) -> None:
-        super().__init__(hp, attack, (1.2, 1.7), (1, 2))
+        super().__init__(hp, attack, 1.7, (1, 2))
 
 
 
@@ -108,6 +114,7 @@ class GameClass():
             onClick= lambda: self.tourChoose('D'),
             textColour=(189,220,222)
         )
+        
         self.items = Button(
             self.screen,
             443, 712, 305, 64,
@@ -135,6 +142,23 @@ class GameClass():
         )
     
         self.moneta.hide()
+
+        #*DEF
+
+        self.defencebutton = Button(
+            self.screen,
+            443, 643, 306, 64,
+            text="chcesz to zrobić?",
+            font=self.font,
+            inactiveColour=(53, 55, 75),
+            pressedColour=(120, 160, 131),
+            hoverColour=(80, 114, 123),
+            textColour=(189,220,222),
+            onClick= lambda: self.defence()
+        )
+
+        self.defencebutton.hide()
+
 
         #*ITEMS
 
@@ -200,6 +224,8 @@ class GameClass():
         self.defence.draw()
         self.moneta.draw()
 
+        self.defencebutton.draw()
+
         self.returnButton1.draw()
         self.returnButton2.draw()
 
@@ -218,6 +244,9 @@ class GameClass():
                         self.attack.show()
                         self.items.show()
                         self.defence.show()
+
+                        self.returnButton1.hide()
+                        self.returnButton2.hide()
 
                         pygame.time.set_timer(self.ENEMYATTACKTIMER, 0)
 
@@ -263,16 +292,14 @@ class GameClass():
         elif choose == 'D':
             self.returnButton1.show()
 
+            self.defencebutton.show()
+
             self.attack.hide()
             self.items.hide()
             self.defence.hide()
-
-            self.player.defenceON = True
-            self.playerTour = False
-            pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
-            self.updateInfo()
+            
         elif choose == 'I':
-            self.returnButton2.hide()
+            self.returnButton2.show()
 
 
             self.attack.hide()
@@ -282,7 +309,6 @@ class GameClass():
 
             for i in range(len(self.itemsButton)):
                 self.itemsButton[i].show()
-
         elif choose == 'R':
             self.eqOn = False
             for i in range(len(self.itemsButton)):
@@ -296,7 +322,7 @@ class GameClass():
 
             self.returnButton1.hide()
             self.returnButton2.hide()
-
+            self.defencebutton.hide()
 
     def coinFlip(self):
         self.enemy.getDmg(self.player.attackFunction(self.enemy.defenceON))
@@ -308,6 +334,32 @@ class GameClass():
 
         self.moneta.hide()
 
+    def defenceTour(self):
+        self.returnButton1.hide()
+        self.defencebutton.hide()
+        self.player.defenceON = True
+        self.playerTour = False
+        pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
+        self.updateInfo()
+
+    def useItem(self, id:int, hp:int):
+        if(self.player.hp < 100):
+            self.eqOn = False
+
+
+            for i in range(len(self.itemsButton)):
+                self.itemsButton[i].hide()
+
+            self.updateTextItemButon()
+            self.player.eq[id]['value'] -= 1
+            self.returnButton2.hide()
+            self.tourChoose = False
+
+            self.player.heal(hp)
+            pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
+        else:
+            self.tourChoose('R')
+            
 
     def updateInfo(self):
         if self.playerTour == False:
@@ -332,26 +384,30 @@ class GameClass():
 
 
     def makeItemsButton(self):
-
-        #32
-        
-
-        butonpos = [[55, 576], [55, 649], [55, 723], 
+        butonpos = [[57, 576], [57, 649], [57, 723], 
                     [418, 576], [418, 649], [418, 723]]
         for i in range(6):
             self.itemsButton.append(
                 Button(
                     self.screen,
-                    butonpos[i][0], butonpos[i][1], 352, 53,
+                    butonpos[i][0], butonpos[i][1], 325, 53,
                     inactiveColour=(52, 73, 85),
                     pressedColour=(120, 160, 131),
                     hoverColour=(80, 114, 123),
                     font=self.font,
                     textColour=(189,220,222),
-                    text=''
+                    text=f'{i}'
                 )
             )
 
+        self.itemsButton[0].setOnClick(lambda: self.useItem(0, self.player.eq[0]['regeneration']))
+        self.itemsButton[1].setOnClick(lambda: self.useItem(1, self.player.eq[1]['regeneration']))
+        self.itemsButton[2].setOnClick(lambda: self.useItem(2, self.player.eq[2]['regeneration']))
+        self.itemsButton[3].setOnClick(lambda: self.useItem(3, self.player.eq[3]['regeneration']))
+        self.itemsButton[4].setOnClick(lambda: self.useItem(4, self.player.eq[4]['regeneration']))
+        self.itemsButton[5].setOnClick(lambda: self.useItem(5, self.player.eq[5]['regeneration']))
+
     def updateTextItemButon(self):
         for i in range(len(self.itemsButton)):
-            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')
+            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']} {i}')
+            pass
