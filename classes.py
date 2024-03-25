@@ -43,7 +43,7 @@ class MobClass():
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(90, 10, 5, (2, 8))
+        super().__init__(100, 10, 5, (2, 8))
         self.eq = [
             {'name': 'Pite mleko smoka', 'value': 99, 'regeneration': 2},
             {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
@@ -55,8 +55,9 @@ class PlayerClass(MobClass):
        
 
 class EnemyClass(MobClass):
-    def __init__(self, hp, attack) -> None:
-        super().__init__(hp, attack, 1.7, (1, 2))
+    def __init__(self, hp, attack, img:str) -> None:
+        super().__init__(hp, attack, 7, (1, 2))
+        self.img = pygame.image.load(img)
 
 
 
@@ -85,10 +86,10 @@ class GameClass():
         self.ENEMYATTACKTIMER = pygame.event.custom_type()
         self.enemyAttackTimer = pygame.event.Event(self.ENEMYATTACKTIMER)
 
+        self.bg = pygame.display.set_mode((800, 800))
+        self.bgImg = pygame.image.load('img/dangeon.png')
+
         #*LAYOUT
-        pygame.draw.rect(self.screen, (217, 217, 217), pygame.Rect(454, 75, 153, 286)) #todo: zmienić to w teksture enemy
-
-
 
         #*FIRST
         self.attack = Button(
@@ -197,16 +198,19 @@ class GameClass():
         #*ENEMY HP
         self.enemyHp = ProgressBar(
             self.screen, 
-            454, 50, 154, 20, 
+            454, 70, 154, 20, 
             lambda: self.enemy.hp * 0.01
         )
 
     def updateEnemyClass(self, enemyClass: EnemyClass):
         self.enemy = enemyClass
 
-    def update(self, events):
-        #*INFO
+#!=======================================================================================
+#!FUNKCJA UPDATE
+#!=======================================================================================
 
+    def update(self, events):
+        self.bg.blit(self.bgImg, (0, 0))#*tło
 
         pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
         
@@ -215,7 +219,6 @@ class GameClass():
             pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
             self.infoTextRenderer(self.infoText, (48,577), (333, 220))
             pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
-
 
 
 
@@ -234,13 +237,26 @@ class GameClass():
 
         self.enemyHp.draw()
 
+
+        if self.enemy.hp <= 0:
+            self.updateInfo(f'udało ci się pokonać przeciwnika')
+            self.enemyHp.hide()
+        else:
+            self.screen.blit(self.enemy.img, (454, 75))#*enemy
+
+
         for event in events:
             if event == self.enemyAttackTimer:
-                    if self.playerTour == False:
+                    if self.playerTour == False and self.enemy.hp > 0:
                         self.player.getDmg(self.enemy.attackFunction(self.player.defenceON))
                         self.playerTour = True
 
-                        self.updateInfo()
+
+                        if self.enemy.lastDmgGiven == 0:
+                            self.updateInfo(f'przeciwnik chybił swój atak')
+                        else:
+                            self.updateInfo(f'przeciwnik zadał ci {self.enemy.lastDmgGiven} obrażeń')
+                        
                         self.attack.show()
                         self.items.show()
                         self.defence.show()
@@ -256,30 +272,9 @@ class GameClass():
         pygame_widgets.update(events)
         pygame.display.update()
 
-
-
-    def infoTextRenderer(self, text, pos, size: pygame.Vector2):
-        words = [word.split(' ') for word in text.splitlines()]
-        space = self.font.size(' ')[0]
-
-        maxWidth = size[0]
-        x,y = pos
-
-        for line in words:
-            for word in line:
-                wordSurface = self.font.render(word, True, (242, 240, 240))
-                wordWidth, wordHeight = wordSurface.get_size()
-
-                if x + wordWidth >= maxWidth:
-                    x = pos[0]
-                    y += wordHeight
-                
-                self.screen.blit(wordSurface, (x, y))
-                x += wordWidth + space
-            x = pos[0]
-            y += wordHeight
-
-  
+#!=======================================================================================
+#!WYBRANIE AKCJI
+#!=======================================================================================
     def tourChoose(self, choose:str):
         if choose == 'A':
             self.returnButton1.show()
@@ -324,15 +319,27 @@ class GameClass():
             self.returnButton2.hide()
             self.defencebutton.hide()
 
+#!=======================================================================================
+#!ATAK
+#!=======================================================================================
+
     def coinFlip(self):
+        self.returnButton1.hide()
         self.enemy.getDmg(self.player.attackFunction(self.enemy.defenceON))
         self.playerTour = False
         
         pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
 
-        self.updateInfo()
+        if self.player.lastDmgGiven == 0:
+            self.updateInfo(f'nie udało ci się zaatakować przeciwnika')
+        else:
+            self.updateInfo(f'zadałeś przeciwnikowi {self.player.lastDmgGiven} obrażeń')
 
         self.moneta.hide()
+
+#!=======================================================================================
+#!UŻYCIE DEFENSYWY
+#!=======================================================================================
 
     def defenceTour(self):
         self.returnButton1.hide()
@@ -340,48 +347,44 @@ class GameClass():
         self.player.defenceON = True
         self.playerTour = False
         pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
-        self.updateInfo()
+        self.updateInfo(f'postanowiłeś się ochronić')
 
-    def useItem(self, id:int, hp:int):
-        if(self.player.hp < 100):
-            self.eqOn = False
+#!=======================================================================================
+#!AKTUALIZACJA TEKSTU
+#!=======================================================================================
+        
+    def updateInfo(self, text:str):
+        self.infoText = f'hp: {self.player.hp}/100\n\n'\
+                f'{text}'
+    
+#!=======================================================================================
+#!WYŚWIETLANIE TEKSTU
+#!=======================================================================================
 
+    def infoTextRenderer(self, text, pos, size: pygame.Vector2):
+        words = [word.split(' ') for word in text.splitlines()]
+        space = self.font.size(' ')[0]
 
-            for i in range(len(self.itemsButton)):
-                self.itemsButton[i].hide()
+        maxWidth = size[0]
+        x,y = pos
 
-            self.updateTextItemButon()
-            self.player.eq[id]['value'] -= 1
-            self.returnButton2.hide()
-            self.tourChoose = False
+        for line in words:
+            for word in line:
+                wordSurface = self.font.render(word, True, (242, 240, 240))
+                wordWidth, wordHeight = wordSurface.get_size()
 
-            self.player.heal(hp)
-            pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
-        else:
-            self.tourChoose('R')
-            
+                if x + wordWidth >= maxWidth:
+                    x = pos[0]
+                    y += wordHeight
+                
+                self.screen.blit(wordSurface, (x, y))
+                x += wordWidth + space
+            x = pos[0]
+            y += wordHeight
 
-    def updateInfo(self):
-        if self.playerTour == False:
-            if self.player.defenceON:
-                self.infoText = f'hp: {self.player.hp}/100\n\n'\
-                                'Ustawiłeś się w pozycję obroną\n'
-            elif self.player.lastDmgGiven == 0:
-                self.infoText = f'hp: {self.player.hp}/100\n\n'\
-                                'Nie udało ci się zaatakować przeciwnik\n'
-            else:
-                self.infoText = f'hp: {self.player.hp}/100\n\n'\
-                                'Zadałeś przeciwnikowi\n'\
-                                f'{self.player.lastDmgGiven} obrażeń'
-        else:
-            if self.enemy.lastDmgGiven == 0:
-                self.infoText = f'hp: {self.player.hp}/100\n\n'\
-                                'Przeciwnikowi nie udało się ciebie zaatakować\n'
-            else:
-                self.infoText = f'hp: {self.player.hp}/100\n\n'\
-                                'przeciwnik zadał\n'\
-                                f'{self.enemy.lastDmgGiven} obrażeń'
-
+#!=======================================================================================
+#!PRZYCISKI DO INVENTORY
+#!=======================================================================================
 
     def makeItemsButton(self):
         butonpos = [[57, 576], [57, 649], [57, 723], 
@@ -409,5 +412,27 @@ class GameClass():
 
     def updateTextItemButon(self):
         for i in range(len(self.itemsButton)):
-            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']} {i}')
+            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')
             pass
+#!=======================================================================================
+#!UŻYWANIE PRZEDMIOTÓW
+#!=======================================================================================
+
+    def useItem(self, id:int, hp:int):
+        if(self.player.hp < 100):
+            self.eqOn = False
+
+
+            for i in range(len(self.itemsButton)):
+                self.itemsButton[i].hide()
+
+            self.updateTextItemButon()
+            self.player.eq[id]['value'] -= 1
+            self.returnButton2.hide()
+
+            self.player.heal(hp)
+            pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
+            self.updateInfo(f'użyłeś przedmiotu {self.player.eq[id]['name']}')
+            self.playerTour = False
+        else:
+            self.tourChoose('R')

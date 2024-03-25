@@ -3,11 +3,11 @@ import classes
 
 gracz = classes.PlayerClass()
 
-enemy = classes.EnemyClass(100, 12)
+enemy = classes.EnemyClass(100, 12, 'img/enemy.png')
 
 gra = classes.GameClass(gracz, enemy)
 
-pygame.time.Clock.tick(60)
+
 
 
 def main():
