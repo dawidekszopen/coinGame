@@ -413,7 +413,7 @@ class GameClass():
     def updateTextItemButon(self):
         for i in range(len(self.itemsButton)):
             self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')
-            pass
+            
 #!=======================================================================================
 #!UŻYWANIE PRZEDMIOTÓW
 #!=======================================================================================
