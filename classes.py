@@ -1,4 +1,4 @@
-from random import randint, uniform
+from random import randint
 
 import pygame_widgets
 from pygame_widgets.button import Button
@@ -155,7 +155,7 @@ class GameClass():
             pressedColour=(120, 160, 131),
             hoverColour=(80, 114, 123),
             textColour=(189,220,222),
-            onClick= lambda: self.defence()
+            onClick= lambda: self.defenceTour()
         )
 
         self.defencebutton.hide()
@@ -198,7 +198,7 @@ class GameClass():
         #*ENEMY HP
         self.enemyHp = ProgressBar(
             self.screen, 
-            454, 70, 154, 20, 
+            618, 284, 100, 20, 
             lambda: self.enemy.hp * 0.01
         )
 
@@ -211,6 +211,8 @@ class GameClass():
 
     def update(self, events):
         self.bg.blit(self.bgImg, (0, 0))#*tło
+
+        pygame.draw.rect(self.screen, (0, 255, 0), pygame.Rect(82, 315, 100, 200))
 
         pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
         
@@ -242,7 +244,7 @@ class GameClass():
             self.updateInfo(f'udało ci się pokonać przeciwnika')
             self.enemyHp.hide()
         else:
-            self.screen.blit(self.enemy.img, (454, 75))#*enemy
+            self.screen.blit(self.enemy.img, (618, 315))#*enemy
 
 
         for event in events:

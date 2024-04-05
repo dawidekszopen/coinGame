@@ -8,8 +8,6 @@ enemy = classes.EnemyClass(100, 12, 'img/enemy.png')
 gra = classes.GameClass(gracz, enemy)
 
 
-
-
 def main():
     while gra.running:
         events = pygame.event.get()
