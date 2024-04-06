@@ -6,16 +6,18 @@ from pygame_widgets.progressbar import ProgressBar
 
 import pygame
 
+import jsonSaveLoad
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 class MobClass():
-    def __init__(self, hp, attack, critRate: int, defence: list) -> None:
+    def __init__(self, hp, attack, critRate: int, defence: list, name: str) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
         self.critRate = critRate
         self.defence = defence
         self.defenceON = False
+        self.name = name
 
     def getDmg(self, dmg):
         self.hp -= dmg
@@ -43,7 +45,7 @@ class MobClass():
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 10, 5, (2, 8))
+        super().__init__(100, 10, 5, (2, 8), 'gracz')
         self.eq = [
             {'name': 'Pite mleko smoka', 'value': 99, 'regeneration': 2},
             {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
@@ -55,17 +57,23 @@ class PlayerClass(MobClass):
        
 
 class EnemyClass(MobClass):
-    def __init__(self, hp, attack, img:str) -> None:
-        super().__init__(hp, attack, 7, (1, 2))
+    def __init__(self, hp:int, attack:int, img:str, name:str) -> None:
+        super().__init__(hp, attack, 7, (1, 2), name)
         self.img = pygame.image.load(img)
-
+        self.fullHp = hp
 
 
 class GameClass():
-    def __init__(self, playerClass: PlayerClass ,enemyClass: EnemyClass) -> None:
-        self.enemy = enemyClass
+    def __init__(self, playerClass: PlayerClass) -> None:
         self.player = playerClass
         self.running = True
+
+
+
+        self.enemy: EnemyClass 
+        self.enemyList = jsonSaveLoad.load('enemy.json')
+        self.generateNewEnemy()
+
 
         self.givenDmg = 0
 
@@ -199,11 +207,16 @@ class GameClass():
         self.enemyHp = ProgressBar(
             self.screen, 
             618, 284, 100, 20, 
-            lambda: self.enemy.hp * 0.01
+            lambda: ((self.enemy.hp * 100)/self.enemy.fullHp) * 0.01
         )
 
-    def updateEnemyClass(self, enemyClass: EnemyClass):
-        self.enemy = enemyClass
+    def generateNewEnemy(self):
+        randEnemy = randint(1, len(self.enemyList)) 
+
+        enemy = self.enemyList[randEnemy-1]
+
+        self.enemy = EnemyClass(enemy['hp'], enemy['attack'], enemy['image'], enemy['name'])       
+
 
 #!=======================================================================================
 #!FUNKCJA UPDATE
@@ -252,6 +265,8 @@ class GameClass():
                     if self.playerTour == False and self.enemy.hp > 0:
                         self.player.getDmg(self.enemy.attackFunction(self.player.defenceON))
                         self.playerTour = True
+
+                        print(self.enemyHp.percent)
 
 
                         if self.enemy.lastDmgGiven == 0:
