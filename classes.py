@@ -10,7 +10,7 @@ import jsonSaveLoad
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 class MobClass():
-    def __init__(self, hp, attack, critRate: int, defence: list, name: str) -> None:
+    def __init__(self, hp, attack, critRate: int, defence: list, name: str, img: str) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
@@ -18,6 +18,7 @@ class MobClass():
         self.defence = defence
         self.defenceON = False
         self.name = name
+        self.img = pygame.image.load(img)
 
     def getDmg(self, dmg):
         self.hp -= dmg
@@ -45,7 +46,7 @@ class MobClass():
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 10, 5, (2, 8), 'gracz')
+        super().__init__(100, 10, 5, (2, 8), 'gracz', 'img/player.png')
         self.eq = [
             {'name': 'Pite mleko smoka', 'value': 99, 'regeneration': 2},
             {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
@@ -58,8 +59,7 @@ class PlayerClass(MobClass):
 
 class EnemyClass(MobClass):
     def __init__(self, hp:int, attack:int, img:str, name:str) -> None:
-        super().__init__(hp, attack, 7, (1, 2), name)
-        self.img = pygame.image.load(img)
+        super().__init__(hp, attack, 7, (1, 2), name, img) 
         self.fullHp = hp
 
 
@@ -225,7 +225,6 @@ class GameClass():
     def update(self, events):
         self.bg.blit(self.bgImg, (0, 0))#*tło
 
-        pygame.draw.rect(self.screen, (0, 255, 0), pygame.Rect(82, 315, 100, 200))
 
         pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
         
@@ -259,6 +258,7 @@ class GameClass():
         else:
             self.screen.blit(self.enemy.img, (618, 315))#*enemy
 
+        self.screen.blit(self.player.img, (61, 315))#* gracz
 
         for event in events:
             if event == self.enemyAttackTimer:

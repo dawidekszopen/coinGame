@@ -3,12 +3,18 @@
         "name": "dead knight",
         "image": "img/enemy/deadKnight.png",
         "hp": 100,
-        "attack": 12
+        "attack": 10
     },
     {
         "name": "evil dwarf",
         "image": "img/enemy/evilDwarf.png",
         "hp": 45,
         "attack": 25
-    }
+    },   
+    {                                         
+        "name": "envious devil",
+        "image": "img/enemy/enviousDevil.png",
+        "hp": 150,
+        "attack": 6
+    }                                        
 ]
