@@ -3,18 +3,28 @@
         "name": "dead knight",
         "image": "img/enemy/deadKnight.png",
         "hp": 100,
-        "attack": 10
+        "attack": 10,
+        "position": [546, 231]    
     },
     {
         "name": "evil dwarf",
         "image": "img/enemy/evilDwarf.png",
         "hp": 45,
-        "attack": 25
+        "attack": 25,
+        "position": [587, 231]    
     },   
     {                                         
-        "name": "envious devil",
-        "image": "img/enemy/enviousDevil.png",
-        "hp": 150,
-        "attack": 6
-    }                                        
+        "name": "ogre",
+        "image": "img/enemy/ogre.png",
+        "hp": 250,
+        "attack": 28,
+        "position": [519, 231]    
+    },
+    {
+        "name": "ghost",
+        "image": "img/enemy/ghost.png",
+        "hp": 5,
+        "attack": 1000,
+        "position": [527, 231]
+    }                       
 ]

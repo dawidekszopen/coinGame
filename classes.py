@@ -10,7 +10,7 @@ import jsonSaveLoad
 #https://colorhunt.co/palette/35374b34495550727b78a083 - paleta kolorów
 
 class MobClass():
-    def __init__(self, hp, attack, critRate: int, defence: list, name: str, img: str) -> None:
+    def __init__(self, hp, attack, critRate: int, defence: list, name: str, img: str, x:int, y:int) -> None:
         self.hp = hp
         self.attack = attack
         self.lastDmgGiven = 0
@@ -19,6 +19,8 @@ class MobClass():
         self.defenceON = False
         self.name = name
         self.img = pygame.image.load(img)
+        self.pos = pygame.Vector2(x, y) 
+
 
     def getDmg(self, dmg):
         self.hp -= dmg
@@ -46,20 +48,20 @@ class MobClass():
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
-        super().__init__(100, 10, 5, (2, 8), 'gracz', 'img/player.png')
+        super().__init__(100, 10, 5, (2, 8), 'gracz', 'img/player.png', 62, 231)
         self.eq = [
-            {'name': 'Pite mleko smoka', 'value': 99, 'regeneration': 2},
+            {'name': 'Pitne mleko smoka', 'value': 99, 'regeneration': 2},
             {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
             {'name': 'Placek trolla', 'value': 99, 'regeneration': 5},
             {'name': 'Placki minotaura', 'value': 99, 'regeneration': 6},
             {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 15},
             {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 20}
         ]
-       
+        self.animaton = False    
 
 class EnemyClass(MobClass):
-    def __init__(self, hp:int, attack:int, img:str, name:str) -> None:
-        super().__init__(hp, attack, 7, (1, 2), name, img) 
+    def __init__(self, hp:int, attack:int, img:str, name:str, x:int, y:int) -> None:
+        super().__init__(hp, attack, 7, (1, 2), name, img, x, y) 
         self.fullHp = hp
 
 
@@ -85,6 +87,12 @@ class GameClass():
 
         self.screen = pygame.display.set_mode((800, 800))
         pygame.display.set_caption('coinGame')
+
+        self.clock = pygame.time.Clock()
+
+        self.dt = None 
+
+
 
         self.font = pygame.font.Font('font/JMH Typewriter.ttf', 25)
 
@@ -146,7 +154,6 @@ class GameClass():
             hoverColour=(207, 177, 31),
             pressedColour=(209, 201, 39),
             onClick= lambda: self.coinFlip(),
-            font=pygame.font.Font('font/JMH Typewriter.ttf', 20),
             image=monetaImg
         )
     
@@ -206,16 +213,51 @@ class GameClass():
         #*ENEMY HP
         self.enemyHp = ProgressBar(
             self.screen, 
-            618, 284, 100, 20, 
+            587, 200, 150, 20, 
             lambda: ((self.enemy.hp * 100)/self.enemy.fullHp) * 0.01
         )
+
+        #*NEXT ENEMY
+
+        self.yesNextEnemyB = Button(
+            self.screen,
+            243, 355, 120, 120,
+            inactiveColour=(53, 55, 75),
+            pressedColour=(120, 160, 131),
+            hoverColour=(80, 114, 123),
+            font=self.font,
+            textColour=(189,220,222),
+            text="tak",
+            onClick= lambda: self.nextEnemy()
+        )
+
+        self.noNextEnemyB = Button(
+            self.screen,
+            436, 355, 120, 120,
+            inactiveColour=(53, 55, 75),
+            pressedColour=(120, 160, 131),
+            hoverColour=(80, 114, 123),
+            font=self.font,
+            textColour=(189,220,222),
+            text="nie",
+            onClick= lambda: self.exitGame()
+        )
+
+        self.yesNextEnemyB.hide()
+        self.noNextEnemyB.hide()
+
+        self.ifPlayerDidLoop = False
+
+        self.nextEnemyCheck = False
+
+
 
     def generateNewEnemy(self):
         randEnemy = randint(1, len(self.enemyList)) 
 
         enemy = self.enemyList[randEnemy-1]
-
-        self.enemy = EnemyClass(enemy['hp'], enemy['attack'], enemy['image'], enemy['name'])       
+    
+        self.enemy = EnemyClass(enemy['hp'], enemy['attack'], enemy['image'], enemy['name'], enemy['position'][0], enemy['position'][1])       
 
 
 #!=======================================================================================
@@ -223,6 +265,9 @@ class GameClass():
 #!=======================================================================================
 
     def update(self, events):
+        self.clock.tick(60)
+        self.dt = self.clock.tick(60) / 1000
+
         self.bg.blit(self.bgImg, (0, 0))#*tło
 
 
@@ -252,13 +297,41 @@ class GameClass():
         self.enemyHp.draw()
 
 
-        if self.enemy.hp <= 0:
-            self.updateInfo(f'udało ci się pokonać przeciwnika')
-            self.enemyHp.hide()
-        else:
-            self.screen.blit(self.enemy.img, (618, 315))#*enemy
+        if self.enemy.hp <= 0 and self.nextEnemyCheck == False:
+            self.askNextRound()
+        elif self.enemy.hp > 0:
+            self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
 
-        self.screen.blit(self.player.img, (61, 315))#* gracz
+
+        if self.player.hp <= 0:
+            self.updateInfo('zostałeś pokonany')
+
+            self.attack.hide()
+            self.defence.hide()
+            self.items.hide()
+        else:
+            self.screen.blit(self.player.img, self.player.pos)#* gracz
+
+        if self.player.animaton:
+            if self.player.pos.x >= 952:
+                self.player.pos.x = -152
+                self.ifPlayerDidLoop = True
+
+            
+            self.player.pos.x += 450 * self.dt
+
+            if self.player.pos.x >= 61 and self.ifPlayerDidLoop:
+                self.generateNewEnemy()
+                self.enemyHp.show()
+                self.player.animaton = False        
+                self.updateInfo('napotkałeś kolejnego przeciwnika')
+                self.playerTour = True
+                self.attack.show()
+                self.items.show()
+                self.defence.show()
+
+
+
 
         for event in events:
             if event == self.enemyAttackTimer:
@@ -266,7 +339,6 @@ class GameClass():
                         self.player.getDmg(self.enemy.attackFunction(self.player.defenceON))
                         self.playerTour = True
 
-                        print(self.enemyHp.percent)
 
 
                         if self.enemy.lastDmgGiven == 0:
@@ -286,8 +358,14 @@ class GameClass():
                         if self.player.defenceON:
                             self.player.defenceON = False
 
+        
+        
+
         pygame_widgets.update(events)
         pygame.display.update()
+
+        
+        
 
 #!=======================================================================================
 #!WYBRANIE AKCJI
@@ -430,7 +508,7 @@ class GameClass():
     def updateTextItemButon(self):
         for i in range(len(self.itemsButton)):
             self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')
-            pass
+            
 #!=======================================================================================
 #!UŻYWANIE PRZEDMIOTÓW
 #!=======================================================================================
@@ -442,9 +520,10 @@ class GameClass():
 
             for i in range(len(self.itemsButton)):
                 self.itemsButton[i].hide()
-
-            self.updateTextItemButon()
+            
             self.player.eq[id]['value'] -= 1
+            self.updateTextItemButon()
+            
             self.returnButton2.hide()
 
             self.player.heal(hp)
@@ -453,3 +532,31 @@ class GameClass():
             self.playerTour = False
         else:
             self.tourChoose('R')
+
+#!=======================================================================================
+#!NASTĘPNY PRZECIWNIK
+#!=======================================================================================
+
+    def askNextRound(self):
+        self.updateInfo(f'udało ci się pokonać przeciwnika')
+        self.enemyHp.hide()
+        pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(215, 275, 370, 250), border_radius=25)
+        text = self.font.render("chcesz grać dalej?", True, (255, 255, 255))
+        self.screen.blit(text, (280,291))
+
+        self.yesNextEnemyB.show()
+        self.noNextEnemyB.show()
+
+
+
+    def nextEnemy(self):
+        self.yesNextEnemyB.hide()
+        self.noNextEnemyB.hide()
+
+        self.nextEnemyCheck = True
+
+        self.player.animaton = True
+
+
+    def exitGame(self):
+        self.running = False
