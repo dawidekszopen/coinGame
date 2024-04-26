@@ -20,7 +20,7 @@ class MobClass():
         self.name = name
         self.img = pygame.image.load(img)
         self.pos = pygame.Vector2(x, y) 
-
+        self.fullHp = hp
 
     def getDmg(self, dmg):
         self.hp -= dmg
@@ -45,24 +45,26 @@ class MobClass():
     def heal(self, hpUP):
         self.hp += hpUP
 
+        if self.hp > 100:
+            self.hp -= self.hp - self.fullHp
+
 
 class PlayerClass(MobClass):
     def __init__(self) -> None:
         super().__init__(100, 10, 5, (2, 8), 'gracz', 'img/player.png', 62, 231)
         self.eq = [
-            {'name': 'Pitne mleko smoka', 'value': 99, 'regeneration': 2},
-            {'name': 'Górska Potęga', 'value': 99, 'regeneration': 4},
-            {'name': 'Placek trolla', 'value': 99, 'regeneration': 5},
-            {'name': 'Placki minotaura', 'value': 99, 'regeneration': 6},
-            {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 15},
-            {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 20}
+            {'name': 'Pitne mleko smoka', 'value': 99, 'regeneration': 20},
+            {'name': 'Górska Potęga', 'value': 99, 'regeneration': 40},
+            {'name': 'Placek trolla', 'value': 99, 'regeneration': 50},
+            {'name': 'Placki minotaura', 'value': 99, 'regeneration': 60},
+            {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 65},
+            {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 100}
         ]
         self.animaton = False    
 
 class EnemyClass(MobClass):
     def __init__(self, hp:int, attack:int, img:str, name:str, x:int, y:int) -> None:
         super().__init__(hp, attack, 7, (1, 2), name, img, x, y) 
-        self.fullHp = hp
 
 
 class GameClass():
@@ -251,7 +253,6 @@ class GameClass():
         self.nextEnemyCheck = False
 
 
-
     def generateNewEnemy(self):
         randEnemy = randint(1, len(self.enemyList)) 
 
@@ -296,13 +297,6 @@ class GameClass():
 
         self.enemyHp.draw()
 
-
-        if self.enemy.hp <= 0 and self.nextEnemyCheck == False:
-            self.askNextRound()
-        elif self.enemy.hp > 0:
-            self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
-
-
         if self.player.hp <= 0:
             self.updateInfo('zostałeś pokonany')
 
@@ -311,6 +305,12 @@ class GameClass():
             self.items.hide()
         else:
             self.screen.blit(self.player.img, self.player.pos)#* gracz
+
+
+        if self.enemy.hp <= 0 and self.nextEnemyCheck == False:
+            self.askNextRound()
+        elif self.enemy.hp > 0:
+            self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
 
         if self.player.animaton:
             if self.player.pos.x >= 952:
@@ -329,9 +329,8 @@ class GameClass():
                 self.attack.show()
                 self.items.show()
                 self.defence.show()
-
-
-
+                self.nextEnemyCheck = False
+                self.ifPlayerDidLoop = False 
 
         for event in events:
             if event == self.enemyAttackTimer:
@@ -538,11 +537,12 @@ class GameClass():
 #!=======================================================================================
 
     def askNextRound(self):
+        pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(215, 275, 370, 250), border_radius=25)
         self.updateInfo(f'udało ci się pokonać przeciwnika')
         self.enemyHp.hide()
-        pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(215, 275, 370, 250), border_radius=25)
         text = self.font.render("chcesz grać dalej?", True, (255, 255, 255))
         self.screen.blit(text, (280,291))
+
 
         self.yesNextEnemyB.show()
         self.noNextEnemyB.show()
