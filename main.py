@@ -3,11 +3,7 @@ import classes
 
 gracz = classes.PlayerClass()
 
-enemy = classes.EnemyClass(100, 12, 'img/enemy.png')
-
-gra = classes.GameClass(gracz, enemy)
-
-
+gra = classes.GameClass(gracz)
 
 
 def main():
