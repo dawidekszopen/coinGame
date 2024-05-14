@@ -1,0 +1,68 @@
+[
+    [
+        {
+            "nazwa": "złaman",
+            "staty": {"dmg": [-10, -1], "crit": [-50, -10], "hp": [-35, -1]}
+        },
+        {
+            "nazwa": "zwykły",
+            "staty": {"dmg": [0, 0], "crit": [0, 0], "hp": [0, 0]}
+        },
+        {
+            "nazwa": "rzadki",
+            "staty": {"dmg": [5, 10], "crit": [5, 15], "hp": [10, 20]}
+        },
+        {
+            "nazwa": "bardzo rzadki",
+            "staty": {"dmg": [25, 45], "crit": [20, 35], "hp": [35, 50]}
+        },
+        {
+            "nazwa": "legendarny",
+            "staty": {"dmg": [55, 85], "crit": [25, 45], "hp": [65, 95]}
+        }
+    ],
+    [
+        {
+            "nazwa": "pierścień",
+            "imgNazwa": "ring",
+            "staty": {"hp": 5},
+            "miejsce": "palce"
+        },
+        {
+            "nazwa": "miecz",
+            "imgNazwa": "sword",
+            "staty": {"dmg": 5, "crit": 10},
+            "miejsce": "broń"
+        },
+        {
+            "nazwa": "topór",
+            "imgNazwa": "?",
+            "staty": {"dmg": 15, "crit": -2},
+            "miejsce": "broń"
+        },
+        {
+            "nazwa": "napierśnik",
+            "imgNazwa": "armor",
+            "staty": {"hp": 25},
+            "miejsce": "klatka"
+        },
+        {
+            "nazwa": "skurzane buty",
+            "imgNazwa": "boots",
+            "staty": {"hp": 4},
+            "miejsce": "stopy"
+        },
+        {
+            "nazwa": "kolczuga",
+            "imgNazwa": "armor",
+            "staty": {"hp": 15},
+            "miejsce": "klatka"
+        },
+        {
+            "nazwa": "chełm",
+            "imgNazwa": "helmet",
+            "staty": {"hp": 5},
+            "miejsce": "głowa"
+        }
+    ]
+]

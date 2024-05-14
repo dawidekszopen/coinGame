@@ -53,14 +53,27 @@ class PlayerClass(MobClass):
     def __init__(self) -> None:
         super().__init__(100, 10, 5, (2, 8), 'gracz', 'img/player.png', 62, 231)
         self.eq = [
-            {'name': 'Pitne mleko smoka', 'value': 99, 'regeneration': 20},
-            {'name': 'Górska Potęga', 'value': 99, 'regeneration': 40},
-            {'name': 'Placek trolla', 'value': 99, 'regeneration': 50},
-            {'name': 'Placki minotaura', 'value': 99, 'regeneration': 60},
-            {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 65},
-            {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 100}
+            [
+                {'name': 'Pitne mleko smoka', 'value': 99, 'regeneration': 20},
+                {'name': 'Górska Potęga', 'value': 99, 'regeneration': 40},
+                {'name': 'Placek trolla', 'value': 99, 'regeneration': 50},
+                {'name': 'Placki minotaura', 'value': 99, 'regeneration': 60},
+                {'name': 'Mglisty Eliksir', 'value': 99, 'regeneration': 65},
+                {'name': 'Eliksir zdrowia', 'value': 99, 'regeneration': 100}
+            ],
+            [
+                {'miejsce': 'głowa', 'item': 'chełm', 'rarity': 'legendarny', 'stats': {'hp': 72}, 'img': 'helmet5'},
+                {'miejsce': 'klatka', 'item': '', 'rarity': '', 'stats': {}, 'img': ''},
+                {'miejsce': 'nogi', 'item': '', 'rarity': '', 'stats': {}, 'img': ''},
+                {'miejsce': 'stopy', 'item': '', 'rarity': '', 'stats': {}, 'img': ''},
+                {'miejsce': 'broń', 'item': '', 'rarity': '', 'stats': {}, 'img': ''},
+                {'miejsce': 'palce', 'item': '', 'rarity': '', 'stats': {}, 'img': ''},
+            ]
         ]
         self.animaton = False    
+
+    def updateStats(self):
+        pass
 
 class EnemyClass(MobClass):
     def __init__(self, hp:int, attack:int, img:str, name:str, x:int, y:int) -> None:
@@ -71,8 +84,9 @@ class GameClass():
     def __init__(self, playerClass: PlayerClass) -> None:
         self.player = playerClass
         self.running = True
+        self.itemsList = jsonSaveLoad.load('items.json')
 
-
+        self.giveItem()
 
         self.enemy: EnemyClass 
         self.enemyList = jsonSaveLoad.load('enemy.json')
@@ -158,8 +172,6 @@ class GameClass():
             onClick= lambda: self.coinFlip(),
             image=monetaImg
         )
-    
-        self.moneta.hide()
 
         #*DEF
 
@@ -174,9 +186,6 @@ class GameClass():
             textColour=(189,220,222),
             onClick= lambda: self.defenceTour()
         )
-
-        self.defencebutton.hide()
-
 
         #*ITEMS
 
@@ -208,9 +217,6 @@ class GameClass():
             pressedColour=(53, 55, 75),
             onClick= lambda: self.tourChoose('R')
         )
-
-        self.returnButton1.hide()
-        self.returnButton2.hide()
 
         #*ENEMY HP
         self.enemyHp = ProgressBar(
@@ -245,12 +251,18 @@ class GameClass():
             onClick= lambda: self.exitGame()
         )
 
-        self.yesNextEnemyB.hide()
-        self.noNextEnemyB.hide()
+        self.hideWidgets(self.yesNextEnemyB, self.noNextEnemyB, self.returnButton1, self.returnButton2, self.defencebutton, self.moneta)
+
+
 
         self.ifPlayerDidLoop = False
 
         self.nextEnemyCheck = False
+
+
+        self.chooseItemOn = True #!zmienić
+
+        
 
 
     def generateNewEnemy(self):
@@ -268,49 +280,61 @@ class GameClass():
     def update(self, events):
         self.clock.tick(60)
         self.dt = self.clock.tick(60) / 1000
+        self.drawWidgets()
 
-        self.bg.blit(self.bgImg, (0, 0))#*tło
+        if self.chooseItemOn:
+            self.hideWidgets(self.attack, self.items, self.defence, self.enemyHp)
+            self.screen.fill((53, 55, 75))
+
+            self.screen.blit(pygame.image.load('img/stickMan.png'), (29, 25))
+
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(91, 45, 48, 48), width=2)#głowa
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(21, 264, 48, 48), width=2)#palce
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(162, 264, 48, 48), width=2)#broń
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(91, 190, 48, 48), width=2)#klata
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(91, 323, 48, 48), width=2)#nogi
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(91, 420, 48, 48), width=2)#stopy
 
 
-        pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
+
+            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(238, 64, 1000, 239), width=2)
+
+
+            self.infoTextRenderer(f'''Twoje rzeczy:\n
+-głowa: {self.player.eq[1][0]['item']} {self.player.eq[1][0]['rarity']} hp: {self.player.eq[1][0]['stats']['hp']}\n
+-klata: {self.player.eq[1][1]['item']} {self.player.eq[1][1]['rarity']} hp: {self.player.eq[1][1]['stats']['hp']}\n
+-palce: {self.player.eq[1][2]['item']} {self.player.eq[1][2]['rarity']} hp: {self.player.eq[1][2]['stats']['hp']}\n
+-broń: {self.player.eq[1][3]['item']} {self.player.eq[1][3]['rarity']} dmg: {self.player.eq[1][3]['stats']['dmg']} critRate: {self.player.eq[1][3]['stats']['crit']}\n
+-nogi: {self.player.eq[1][4]['item']} {self.player.eq[1][4]['rarity']} hp: {self.player.eq[1][4]['stats']['hp']}\n
+-stopy: {self.player.eq[1][5]['item']} {self.player.eq[1][5]['rarity']} hp: {self.player.eq[1][5]['stats']['hp']}\n
+''', 
+                                  [238, 64], pygame.Vector2(1000, 239))
+
         
         
-        if self.eqOn == False:
-            pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
-            self.infoTextRenderer(self.infoText, (48,577), (333, 220))
-            pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
-
-
-
-        self.attack.draw()
-        self.items.draw()
-        self.defence.draw()
-        self.moneta.draw()
-
-        self.defencebutton.draw()
-
-        self.returnButton1.draw()
-        self.returnButton2.draw()
-
-        for i in range(len(self.itemsButton)):
-            self.itemsButton[i].draw()
-
-        self.enemyHp.draw()
-
-        if self.player.hp <= 0:
-            self.updateInfo('zostałeś pokonany')
-
-            self.attack.hide()
-            self.defence.hide()
-            self.items.hide()
         else:
-            self.screen.blit(self.player.img, self.player.pos)#* gracz
+            self.bg.blit(self.bgImg, (0, 0))#*tło
+
+            pygame.draw.rect(self.screen, (53, 55, 75), pygame.Rect(0, 550, 800, 250), border_top_left_radius=20, border_top_right_radius=20)
+
+            if self.eqOn == False:
+                pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(38, 566, 333, 220), border_radius=10)
+                self.infoTextRenderer(self.infoText, (48,577), (333, 220))
+                pygame.draw.rect(self.screen, (52, 73, 85), pygame.Rect(429, 566, 333, 220), border_radius=10)
 
 
-        if self.enemy.hp <= 0 and self.nextEnemyCheck == False:
-            self.askNextRound()
-        elif self.enemy.hp > 0:
-            self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
+            if self.player.hp <= 0:
+                self.updateInfo('zostałeś pokonany')
+
+                self.hideWidgets(self.attack, self.defence, self.items)
+            else:
+                self.screen.blit(self.player.img, self.player.pos)#* gracz
+
+
+            if self.enemy.hp <= 0 and self.nextEnemyCheck == False:
+                self.askNextRound()
+            elif self.enemy.hp > 0:
+                self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
 
         if self.player.animaton:
             if self.player.pos.x >= 952:
@@ -322,15 +346,16 @@ class GameClass():
 
             if self.player.pos.x >= 61 and self.ifPlayerDidLoop:
                 self.generateNewEnemy()
-                self.enemyHp.show()
                 self.player.animaton = False        
                 self.updateInfo('napotkałeś kolejnego przeciwnika')
                 self.playerTour = True
-                self.attack.show()
-                self.items.show()
-                self.defence.show()
+
+
+                self.showWidgets(self.attack, self.items, self.defence, self.enemyHp)
+
                 self.nextEnemyCheck = False
                 self.ifPlayerDidLoop = False 
+
 
         for event in events:
             if event == self.enemyAttackTimer:
@@ -344,13 +369,10 @@ class GameClass():
                             self.updateInfo(f'przeciwnik chybił swój atak')
                         else:
                             self.updateInfo(f'przeciwnik zadał ci {self.enemy.lastDmgGiven} obrażeń')
-                        
-                        self.attack.show()
-                        self.items.show()
-                        self.defence.show()
 
-                        self.returnButton1.hide()
-                        self.returnButton2.hide()
+
+                        self.hideWidgets(self.attack, self.defence, self.items, self.returnButton1, self.returnButton2)
+
 
                         pygame.time.set_timer(self.ENEMYATTACKTIMER, 0)
 
@@ -371,29 +393,22 @@ class GameClass():
 #!=======================================================================================
     def tourChoose(self, choose:str):
         if choose == 'A':
+            self.hideWidgets(self.attack, self.defence, self.items)
+            
             self.returnButton1.show()
-
-            self.attack.hide()
-            self.items.hide()
-            self.defence.hide()
 
             self.moneta.show()
         elif choose == 'D':
+            self.hideWidgets(self.attack, self.defence, self.items)
+            
             self.returnButton1.show()
 
             self.defencebutton.show()
-
-            self.attack.hide()
-            self.items.hide()
-            self.defence.hide()
-            
         elif choose == 'I':
+            self.hideWidgets(self.attack, self.defence, self.items)
+
             self.returnButton2.show()
 
-
-            self.attack.hide()
-            self.items.hide()
-            self.defence.hide()
             self.eqOn = True
 
             for i in range(len(self.itemsButton)):
@@ -403,22 +418,14 @@ class GameClass():
             for i in range(len(self.itemsButton)):
                 self.itemsButton[i].hide()
             
-            self.moneta.hide()
-
-            self.attack.show()
-            self.items.show()
-            self.defence.show()
-
-            self.returnButton1.hide()
-            self.returnButton2.hide()
-            self.defencebutton.hide()
+            self.showWidgets(self.attack, self.defence, self.items)
+            self.hideWidgets(self.returnButton1, self.returnButton2, self.defencebutton, self.moneta)
 
 #!=======================================================================================
 #!ATAK
 #!=======================================================================================
 
     def coinFlip(self):
-        self.returnButton1.hide()
         self.enemy.getDmg(self.player.attackFunction(self.enemy.defenceON))
         self.playerTour = False
         
@@ -429,33 +436,33 @@ class GameClass():
         else:
             self.updateInfo(f'zadałeś przeciwnikowi {self.player.lastDmgGiven} obrażeń')
 
-        self.moneta.hide()
+        self.hideWidgets(self.moneta, self.returnButton1)
 
 #!=======================================================================================
 #!UŻYCIE DEFENSYWY
 #!=======================================================================================
 
     def defenceTour(self):
-        self.returnButton1.hide()
-        self.defencebutton.hide()
+        self.hideWidgets(self.defencebutton, self.returnButton1)
+
         self.player.defenceON = True
         self.playerTour = False
         pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
         self.updateInfo(f'postanowiłeś się ochronić')
 
 #!=======================================================================================
-#!AKTUALIZACJA TEKSTU
+#!AKTUALIZACJA miejsce
 #!=======================================================================================
         
     def updateInfo(self, text:str):
-        self.infoText = f'hp: {self.player.hp}/100\n\n'\
+        self.infoText = f'hp: {self.player.hp}/{self.player.fullHp}\n\n'\
                 f'{text}'
     
 #!=======================================================================================
 #!WYŚWIETLANIE TEKSTU
 #!=======================================================================================
 
-    def infoTextRenderer(self, text, pos, size: pygame.Vector2):
+    def infoTextRenderer(self, text: str, pos: list[int], size: pygame.Vector2):
         words = [word.split(' ') for word in text.splitlines()]
         space = self.font.size(' ')[0]
 
@@ -497,16 +504,16 @@ class GameClass():
                 )
             )
 
-        self.itemsButton[0].setOnClick(lambda: self.useItem(0, self.player.eq[0]['regeneration']))
-        self.itemsButton[1].setOnClick(lambda: self.useItem(1, self.player.eq[1]['regeneration']))
-        self.itemsButton[2].setOnClick(lambda: self.useItem(2, self.player.eq[2]['regeneration']))
-        self.itemsButton[3].setOnClick(lambda: self.useItem(3, self.player.eq[3]['regeneration']))
-        self.itemsButton[4].setOnClick(lambda: self.useItem(4, self.player.eq[4]['regeneration']))
-        self.itemsButton[5].setOnClick(lambda: self.useItem(5, self.player.eq[5]['regeneration']))
+        self.itemsButton[0].setOnClick(lambda: self.useItem(0, self.player.eq[0][0]['regeneration']))
+        self.itemsButton[1].setOnClick(lambda: self.useItem(1, self.player.eq[0][1]['regeneration']))
+        self.itemsButton[2].setOnClick(lambda: self.useItem(2, self.player.eq[0][2]['regeneration']))
+        self.itemsButton[3].setOnClick(lambda: self.useItem(3, self.player.eq[0][3]['regeneration']))
+        self.itemsButton[4].setOnClick(lambda: self.useItem(4, self.player.eq[0][4]['regeneration']))
+        self.itemsButton[5].setOnClick(lambda: self.useItem(5, self.player.eq[0][5]['regeneration']))
 
     def updateTextItemButon(self):
         for i in range(len(self.itemsButton)):
-            self.itemsButton[i].setText(f'{self.player.eq[i]['name']} {self.player.eq[i]['value']}')
+            self.itemsButton[i].setText(f'{self.player.eq[0][i]['name']} {self.player.eq[0][i]['value']}')
             
 #!=======================================================================================
 #!UŻYWANIE PRZEDMIOTÓW
@@ -520,14 +527,14 @@ class GameClass():
             for i in range(len(self.itemsButton)):
                 self.itemsButton[i].hide()
             
-            self.player.eq[id]['value'] -= 1
+            self.player.eq[0][id]['value'] -= 1
             self.updateTextItemButon()
             
             self.returnButton2.hide()
 
             self.player.heal(hp)
             pygame.time.set_timer(self.ENEMYATTACKTIMER, 1500)
-            self.updateInfo(f'użyłeś przedmiotu {self.player.eq[id]['name']}')
+            self.updateInfo(f'użyłeś przedmiotu {self.player.eq[0][id]['name']}')
             self.playerTour = False
         else:
             self.tourChoose('R')
@@ -544,19 +551,66 @@ class GameClass():
         self.screen.blit(text, (280,291))
 
 
-        self.yesNextEnemyB.show()
-        self.noNextEnemyB.show()
+        self.showWidgets(self.yesNextEnemyB, self.noNextEnemyB)
 
 
 
     def nextEnemy(self):
-        self.yesNextEnemyB.hide()
-        self.noNextEnemyB.hide()
+        self.hideWidgets(self.yesNextEnemyB, self.noNextEnemyB)
 
         self.nextEnemyCheck = True
 
         self.player.animaton = True
 
+#!=======================================================================================
+#!ITEMY PO PRZECIWNIKU
+#!=======================================================================================
+
+    def giveItem(self):
+        rarity = self.itemsList[0][randint(0, len(self.itemsList[0]))-1]
+        item = self.itemsList[1][randint(0, len(self.itemsList[1]))-1]
+
+        newItem = {'nazwa': item['nazwa'], 
+                   'rarity': rarity['nazwa']}
+
+        if 'hp' in item['staty']:
+            newItem['staty'] = {'hp': item['staty']['hp'] + randint(rarity['staty']['hp'][0], rarity['staty']['hp'][1])}
+        elif 'dmg' in item['staty'] and 'crit' in item['staty']:
+            newItem['staty'] = {
+                'dmg': item['staty']['dmg'] + randint(rarity['staty']['dmg'][0], rarity['staty']['dmg'][1]),
+                'crit': item['staty']['crit'] + randint(rarity['staty']['crit'][0], rarity['staty']['crit'][1])
+                }
+
+        newItem['miejsce'] = item['miejsce']
+
+        newItem['img'] = f'{item['imgNazwa']}{self.itemsList[0].index(rarity)+1}'
+
+        print(newItem)
+
+#!=======================================================================================
+#!WIDGETS
+#!=======================================================================================
+
+    def showWidgets(self, *widgets):
+        for widget in widgets:
+            widget.show()
+
+    def hideWidgets(self, *widgets):
+        for widget in widgets:
+            widget.hide()
+
+    def drawWidgets(self):
+        self.attack.draw()
+        self.items.draw()
+        self.defence.draw()
+        self.moneta.draw()
+        self.defencebutton.draw()
+        self.returnButton1.draw()
+        self.returnButton2.draw()
+        self.enemyHp.draw()
+
+        for i in range(len(self.itemsButton)):
+            self.itemsButton[i].draw()
 
     def exitGame(self):
         self.running = False
