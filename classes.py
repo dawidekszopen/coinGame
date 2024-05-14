@@ -296,22 +296,39 @@ class GameClass():
             pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(91, 420, 48, 48), width=2)#stopy
 
 
+            self.infoTextRenderer(f'''Twoje rzeczy:
+-głowa: {self.player.eq[1][0]['item']} {self.player.eq[1][0]['rarity']}  {f"hp: {self.player.eq[1][0]['stats']['hp']}" if 'hp' in self.player.eq[1][0]['stats'] else ''}
+-klata: {self.player.eq[1][1]['item']} {self.player.eq[1][1]['rarity']} {f"hp: {self.player.eq[1][1]['stats']['hp']}" if 'hp' in self.player.eq[1][1]['stats'] else ''}
+-palce: {self.player.eq[1][2]['item']} {self.player.eq[1][2]['rarity']} {f'hp: {self.player.eq[1][2]['stats']['hp']}' if 'hp' in self.player.eq[1][2]['stats'] else ''}
+-broń: {self.player.eq[1][3]['item']} {self.player.eq[1][3]['rarity']} {f'dmg: {self.player.eq[1][3]['stats']['dmg']}' if 'dmg' in self.player.eq[1][3]['stats'] else ''} {f'critRate: {self.player.eq[1][3]['stats']['crit']}' if 'crit' in self.player.eq[1][3]['stats'] else ''}
+-nogi: {self.player.eq[1][4]['item']} {self.player.eq[1][4]['rarity']} {f'hp: {self.player.eq[1][4]['stats']['hp']}' if 'hp' in self.player.eq[1][4]['stats'] else ''}
+-stopy: {self.player.eq[1][5]['item']} {self.player.eq[1][5]['rarity']} {f'hp: {self.player.eq[1][5]['stats']['hp']}' if 'hp' in self.player.eq[1][5]['stats'] else ''}''', 
+            [238, 64], pygame.Vector2(1000, 239))
 
-            pygame.draw.rect(self.screen, (252, 81, 81), pygame.Rect(238, 64, 1000, 239), width=2)
+            #głowa
+            if self.player.eq[1][0]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][0]['img']}.png'), (91, 45))
+            
+            #klata
+            if self.player.eq[1][1]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][1]['img']}.png'), (91, 190))
 
-
-            self.infoTextRenderer(f'''Twoje rzeczy:\n
--głowa: {self.player.eq[1][0]['item']} {self.player.eq[1][0]['rarity']} hp: {self.player.eq[1][0]['stats']['hp']}\n
--klata: {self.player.eq[1][1]['item']} {self.player.eq[1][1]['rarity']} hp: {self.player.eq[1][1]['stats']['hp']}\n
--palce: {self.player.eq[1][2]['item']} {self.player.eq[1][2]['rarity']} hp: {self.player.eq[1][2]['stats']['hp']}\n
--broń: {self.player.eq[1][3]['item']} {self.player.eq[1][3]['rarity']} dmg: {self.player.eq[1][3]['stats']['dmg']} critRate: {self.player.eq[1][3]['stats']['crit']}\n
--nogi: {self.player.eq[1][4]['item']} {self.player.eq[1][4]['rarity']} hp: {self.player.eq[1][4]['stats']['hp']}\n
--stopy: {self.player.eq[1][5]['item']} {self.player.eq[1][5]['rarity']} hp: {self.player.eq[1][5]['stats']['hp']}\n
-''', 
-                                  [238, 64], pygame.Vector2(1000, 239))
-
+            #palce
+            if self.player.eq[1][2]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][2]['img']}.png'), (21, 264))
         
-        
+            #bron
+            if self.player.eq[1][3]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][3]['img']}.png'), (162, 264))
+
+            #nogi
+            if self.player.eq[1][4]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][4]['img']}.png'), (91, 323))
+
+            #stopy
+            if self.player.eq[1][5]['img'] != '':
+                self.screen.blit(pygame.image.load(f'img\icons\{self.player.eq[1][5]['img']}.png'), (91, 420))
+
         else:
             self.bg.blit(self.bgImg, (0, 0))#*tło
 
@@ -335,6 +352,7 @@ class GameClass():
                 self.askNextRound()
             elif self.enemy.hp > 0:
                 self.screen.blit(self.enemy.img, self.enemy.pos)#*enemy
+
 
         if self.player.animaton:
             if self.player.pos.x >= 952:
@@ -371,7 +389,7 @@ class GameClass():
                             self.updateInfo(f'przeciwnik zadał ci {self.enemy.lastDmgGiven} obrażeń')
 
 
-                        self.hideWidgets(self.attack, self.defence, self.items, self.returnButton1, self.returnButton2)
+                        self.showWidgets(self.attack, self.defence, self.items)
 
 
                         pygame.time.set_timer(self.ENEMYATTACKTIMER, 0)
